@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office World Cup 2026 Sweepstake — Live</title>
+<style>
+  :root{
+    --green:#0a7d3c; --green2:#0c9648; --gold:#e8b90b; --dark:#0f2417;
+    --ink:#12261a; --muted:#5c6b60; --line:#e1e7e1; --bg:#f4f7f2; --card:#ffffff;
+    --shadow:0 8px 30px rgba(16,50,30,.10);
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,#eef4ea 0%,#f6f8f4 40%,#eef2f6 100%);
+    color:var(--ink); line-height:1.5; padding:24px 16px 70px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header.top{text-align:center;margin-bottom:18px}
+  header.top .badge{display:inline-block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:6px}
+  header.top h1{margin:0;font-size:clamp(24px,4.5vw,38px);font-weight:800;letter-spacing:-.5px;color:var(--dark)}
+  header.top p{margin:6px 0 0;color:var(--muted);font-size:14.5px}
+  .status-bar{display:flex;justify-content:center;align-items:center;gap:12px;margin:10px 0 4px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+  .status-bar .live-dot{width:9px;height:9px;border-radius:50%;background:#28c76f;display:inline-block;box-shadow:0 0 0 0 rgba(40,199,111,.6);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(40,199,111,.5)}70%{box-shadow:0 0 0 8px rgba(40,199,111,0)}100%{box-shadow:0 0 0 0 rgba(40,199,111,0)}}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:9px;font-weight:700}
+  .btn-ghost{background:#eef1ee;color:var(--ink);padding:7px 13px;font-size:13px}
+  .btn-ghost:hover{background:#e2e7e2}
+
+  h2.sec{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--green);margin:28px 0 12px;display:flex;align-items:center;gap:8px}
+
+  /* Winner banner */
+  .winner{display:none;background:linear-gradient(120deg,#12603a,#0c9648);color:#fff;border-radius:16px;padding:20px 22px;text-align:center;box-shadow:var(--shadow);margin-bottom:6px}
+  .winner.show{display:block;animation:pop .5s ease}
+  .winner .t{font-size:13px;letter-spacing:2px;text-transform:uppercase;opacity:.85}
+  .winner .n{font-size:26px;font-weight:800;margin:4px 0}
+
+  /* Leaderboard */
+  .board{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+  .lbcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 4px 16px rgba(16,50,30,.06);position:relative;overflow:hidden}
+  .lbcard .rankbig{position:absolute;right:10px;top:2px;font-size:44px;font-weight:800;color:#f0f3f0;line-height:1}
+  .lbcard .pname{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px}
+  .lbcard .swatch{width:12px;height:12px;border-radius:50%}
+  .lbcard .best{font-size:13px;color:var(--muted);margin-top:3px}
+  .lbcard .alive{margin-top:8px;font-size:22px;font-weight:800;color:var(--dark)}
+  .lbcard .alive span{font-size:12px;font-weight:600;color:var(--muted)}
+
+  /* Scoreboard */
+  .scols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:820px){.scols{grid-template-columns:1fr}}
+  .scol h3{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 10px}
+  .match{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;box-shadow:0 3px 12px rgba(16,50,30,.05)}
+  .match .stg{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between}
+  .match .stg .lv{color:#c0392b;font-weight:800}
+  .match .row{display:flex;align-items:center;gap:8px;padding:2px 0}
+  .match .row img{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
+  .match .row .tn{flex:1;font-weight:600;font-size:14px}
+  .match .row .sc{font-weight:800;font-size:16px;min-width:20px;text-align:center}
+  .match .row.win .tn{color:var(--dark)}
+  .match .row.lose{opacity:.5}
+  .match .when{font-size:12px;color:var(--muted);margin-top:6px}
+  .emptyc{color:var(--muted);font-size:13.5px;padding:12px;background:#fff;border:1px dashed var(--line);border-radius:12px}
+
+  /* Squads */
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px}
+  .pcard{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 16px rgba(16,50,30,.06)}
+  .pcard .phead{padding:11px 14px;color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:space-between}
+  .pcard .phead .sub{font-weight:600;font-size:12px;opacity:.9}
+  .pcard ul{list-style:none;margin:0;padding:8px}
+  .pcard li{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:9px;font-size:14.5px;font-weight:600}
+  .pcard li:nth-child(odd){background:#f6f9f6}
+  .pcard li .flag{font-size:18px;flex:0 0 auto}
+  .pcard li .nm{flex:1}
+  .pcard li.out .nm{text-decoration:line-through;color:#b0b8b0}
+  .pcard li.out .flag{filter:grayscale(1);opacity:.5}
+  .pill{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap;letter-spacing:.3px}
+  .pill.in{background:#e4f5ea;color:#0a7d3c}
+  .pill.out{background:#fbe7e4;color:#c0392b}
+  .pill.live{background:#c0392b;color:#fff}
+  .pill.champ{background:var(--gold);color:#3a2f00}
+  .ov{cursor:pointer;font-size:11px;color:#b7c0b7;margin-left:2px;user-select:none}
+  .ov:hover{color:#c0392b}
+
+  .foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:30px;line-height:1.7}
+  .foot a{color:var(--green)}
+  @keyframes pop{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="badge">⚽ Office Sweepstake · Live</div>
+    <h1>World Cup 2026 Tracker</h1>
+    <p>Five players. Twenty-five teams. Furthest team wins the pot.</p>
+    <div class="status-bar">
+      <span><span class="live-dot"></span> <span id="updated">Loading live scores…</span></span>
+      <button class="btn-ghost" onclick="refresh(true)">↻ Refresh now</button>
+    </div>
+  </header>
+
+  <div class="winner" id="winner"></div>
+
+  <h2 class="sec">🏆 Leaderboard</h2>
+  <div class="board" id="board"></div>
+
+  <h2 class="sec">📺 Live &amp; recent scores</h2>
+  <div class="scols">
+    <div class="scol"><h3>🔴 Live now</h3><div id="live"></div></div>
+    <div class="scol"><h3>✅ Latest results</h3><div id="results-list"></div></div>
+    <div class="scol"><h3>📅 Coming up</h3><div id="upcoming"></div></div>
+  </div>
+
+  <h2 class="sec">👥 The squads</h2>
+  <div class="results" id="squads"></div>
+
+  <div class="foot">
+    Live data from <a href="https://www.thesportsdb.com" target="_blank">TheSportsDB</a> · refreshes automatically every 60 seconds (needs an internet connection).<br>
+    A team is marked <strong>Out</strong> when it loses a knockout tie; penalty results resolve automatically once the next round is set.
+    See something wrong? Hover a team and click <strong>✕/↺</strong> to fix it by hand.
+  </div>
+</div>
+
+<script>
+/* ---------------- The locked-in draw ---------------- */
+const DRAW = [
+  {name:'Bri',   color:'#0c9648', teams:[['Colombia','🇨🇴'],['Ghana','🇬🇭'],['England','🏴󠁧󠁢󠁥󠁮󠁧󠁿'],['Egypt','🇪🇬'],['Bosnia & Herz.','🇧🇦']]},
+  {name:'Shane', color:'#c0392b', teams:[['Norway','🇳🇴'],['Argentina','🇦🇷'],['Paraguay','🇵🇾'],['DR Congo','🇨🇩'],['Belgium','🇧🇪']]},
+  {name:'Tom',   color:'#2563c9', teams:[['Australia','🇦🇺'],['Morocco','🇲🇦'],['Switzerland','🇨🇭'],['USA','🇺🇸'],['Austria','🇦🇹']]},
+  {name:'Seb',   color:'#e8880b', teams:[['Portugal','🇵🇹'],['Canada','🇨🇦'],['Algeria','🇩🇿'],['Brazil','🇧🇷'],['Cape Verde','🇨🇻']]},
+  {name:'Suzie', color:'#7d3cc0', teams:[['Spain','🇪🇸'],['France','🇫🇷'],['Croatia','🇭🇷'],['Mexico','🇲🇽'],['Senegal','🇸🇳']]},
+];
+
+/* ---------------- Stage schedule (2026 WC) ---------------- */
+const STAGES = [
+  {from:'2026-06-28', to:'2026-07-03', lvl:1, label:'Round of 32', short:'R32'},
+  {from:'2026-07-04', to:'2026-07-07', lvl:2, label:'Round of 16', short:'R16'},
+  {from:'2026-07-09', to:'2026-07-11', lvl:3, label:'Quarter-final', short:'QF'},
+  {from:'2026-07-14', to:'2026-07-15', lvl:4, label:'Semi-final', short:'SF'},
+  {from:'2026-07-18', to:'2026-07-18', lvl:5, label:'Third place', short:'3rd'},
+  {from:'2026-07-19', to:'2026-07-19', lvl:6, label:'Final', short:'Final'},
+];
+const LVL_LABEL = {1:'Round of 32',2:'Round of 16',3:'Quarter-final',4:'Semi-final',5:'Third place',6:'Final',7:'Champions'};
+function stageOf(d){ for(const s of STAGES){ if(d>=s.from && d<=s.to) return s; } return null; }
+
+const TODAY = new Date().toISOString().slice(0,10);
+const API = 'https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026';
+const OVKEY = 'wc26_overrides_v1';
+
+/* ---------------- Team name normalisation ---------------- */
+function canon(n){
+  let s=(n||'').toLowerCase().replace(/[^a-z]/g,'');
+  if(s.includes('bosnia')) return 'bosnia';
+  if(s.includes('congo')) return 'drcongo';
+  if(s==='usa'||s.includes('unitedstates')) return 'usa';
+  if(s.includes('capeverde')||s.includes('caboverde')) return 'capeverde';
+  return s;
+}
+// canon -> {name, flag, player, color}
+const TEAMS = {};
+DRAW.forEach(p=>p.teams.forEach(([nm,fl])=>{ TEAMS[canon(nm)] = {name:nm, flag:fl, player:p.name, color:p.color}; }));
+
+/* ---------------- State ---------------- */
+let EVENTS = [];
+let OV = load();
+function load(){ try{return JSON.parse(localStorage.getItem(OVKEY))||{};}catch(e){return {};} }
+function saveOv(){ try{localStorage.setItem(OVKEY, JSON.stringify(OV));}catch(e){} }
+
+/* ---------------- Match helpers ---------------- */
+const num = v => (v===null||v===undefined||v==='')?null:parseInt(v,10);
+function isLive(e){ const s=(e.strStatus||'').toUpperCase().trim(); return ['1H','2H','HT','ET','BT','LIVE'].includes(s); }
+function notStarted(e){ const s=(e.strStatus||'').toUpperCase().trim(); return s===''||s==='NS'||s==='TBD'||s==='NOT STARTED'||s==='SCHEDULED'; }
+function isFinished(e){
+  const s=(e.strStatus||'').toUpperCase().trim();
+  if(['FT','AET','PEN','MATCH FINISHED','FINISHED','AWARDED','FT (P)','AET (P)'].includes(s)) return true;
+  if(num(e.intHomeScore)!==null && num(e.intAwayScore)!==null && !isLive(e) && !notStarted(e) && e.dateEvent < TODAY) return true;
+  return false;
+}
+function ours(e){ return TEAMS[canon(e.strHomeTeam)] || TEAMS[canon(e.strAwayTeam)]; }
+function koMatchesForOurTeams(){ return EVENTS.filter(e=>stageOf(e.dateEvent) && ours(e)); }
+
+/* ---------------- Fetch ---------------- */
+async function refresh(manual){
+  try{
+    const res = await fetch(API, {cache:'no-store'});
+    const data = await res.json();
+    EVENTS = (data && data.events) ? data.events : [];
+    const now = new Date();
+    document.getElementById('updated').textContent =
+      'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    renderAll();
+  }catch(err){
+    document.getElementById('updated').textContent = 'Live data unavailable — showing squads (check connection).';
+    if(EVENTS.length===0) renderAll();
+  }
+}
+
+/* ---------------- Status engine ---------------- */
+function buildAppearances(){
+  const ap = {};
+  EVENTS.forEach(e=>{ const st=stageOf(e.dateEvent); if(!st) return;
+    [e.strHomeTeam, e.strAwayTeam].forEach(n=>{ const c=canon(n); ap[c]=Math.max(ap[c]||0, st.lvl); });
+  });
+  return ap;
+}
+function statusFor(c){
+  const ap = APPEAR;
+  const ms = EVENTS.filter(e=>{ const st=stageOf(e.dateEvent); return st && (canon(e.strHomeTeam)===c || canon(e.strAwayTeam)===c); })
+                   .sort((a,b)=> a.dateEvent<b.dateEvent?-1:1);
+  let out=false, lostLvl=null, champion=false, maxLvl=0;
+  let liveMatch=null, nextMatch=null, lastWinLvl=0, unresolved=false;
+  ms.forEach(e=>{
+    const st=stageOf(e.dateEvent); maxLvl=Math.max(maxLvl, st.lvl);
+    const home = canon(e.strHomeTeam)===c;
+    const opp = canon(home?e.strAwayTeam:e.strHomeTeam);
+    const hs=num(e.intHomeScore), as=num(e.intAwayScore);
+    if(isLive(e)) liveMatch=e;
+    if(notStarted(e) && !nextMatch) nextMatch=e;
+    if(isFinished(e) && hs!==null && as!==null){
+      const gf=home?hs:as, ga=home?as:hs;
+      if(gf<ga){ out=true; lostLvl=st.lvl; }
+      else if(gf>ga){ if(st.lvl===6) champion=true; lastWinLvl=Math.max(lastWinLvl, st.lvl); }
+      else { // level after FT -> penalties: resolve by who appears later
+        if((ap[c]||0) > st.lvl){ lastWinLvl=Math.max(lastWinLvl, st.lvl); }
+        else if((ap[opp]||0) > st.lvl){ out=true; lostLvl=st.lvl; }
+        else { unresolved=true; }
+      }
+    }
+  });
+  // manual override
+  if(OV[c]==='out'){ out=true; champion=false; if(lostLvl===null) lostLvl=maxLvl||1; }
+  if(OV[c]==='in'){ out=false; }
+
+  let reached;
+  if(champion) reached=7;
+  else if(out) reached=lostLvl||maxLvl||1;
+  else reached=Math.max(maxLvl, lastWinLvl>=maxLvl?lastWinLvl+1:maxLvl); // through to next if won latest
+  reached=Math.min(reached,7);
+
+  const alive = !out;
+  const progress = champion?1000 : reached*10 + (alive?5:0);
+  return {c, out, champion, alive, reached, progress, liveMatch, nextMatch, unresolved, lostLvl, maxLvl, overridden:!!OV[c]};
+}
+
+/* ---------------- Rendering ---------------- */
+let APPEAR = {};
+let STAT = {};
+
+function renderAll(){
+  APPEAR = buildAppearances();
+  STAT = {};
+  Object.keys(TEAMS).forEach(c=> STAT[c]=statusFor(c));
+  renderBoard();
+  renderScoreboard();
+  renderSquads();
+  renderWinner();
+}
+
+function statusPill(s){
+  if(s.champion) return '<span class="pill champ">🏆 Champions</span>';
+  if(s.out) return `<span class="pill out">Out · ${LVL_LABEL[s.lostLvl]||''}</span>`;
+  if(s.liveMatch) return '<span class="pill live">🔴 Live now</span>';
+  if(s.nextMatch){ const st=stageOf(s.nextMatch.dateEvent); return `<span class="pill in">Into ${st.label}</span>`; }
+  if(s.reached>1) return `<span class="pill in">Through to ${LVL_LABEL[Math.min(s.reached,6)]}</span>`;
+  return '<span class="pill in">In</span>';
+}
+
+function renderSquads(){
+  const box=document.getElementById('squads'); box.innerHTML='';
+  DRAW.forEach(p=>{
+    const statuses=p.teams.map(([nm])=>STAT[canon(nm)]);
+    const aliveN=statuses.filter(s=>s.alive).length;
+    const card=document.createElement('div'); card.className='pcard';
+    card.innerHTML=`<div class="phead" style="background:${p.color}">
+        <span>${p.name}</span><span class="sub">${aliveN}/${p.teams.length} alive</span></div>
+      <ul>${p.teams.map(([nm,fl])=>{
+        const c=canon(nm); const s=STAT[c];
+        const ovBtn = s.alive
+          ? `<span class="ov" title="Mark out" onclick="setOv('${c}','out')">✕</span>`
+          : `<span class="ov" title="Back in" onclick="setOv('${c}','in')">↺</span>`;
+        return `<li class="${s.alive?'':'out'}">
+            <span class="flag">${fl}</span><span class="nm">${nm}</span>
+            ${statusPill(s)} ${ovBtn}</li>`;
+      }).join('')}</ul>`;
+    box.appendChild(card);
+  });
+}
+
+function setOv(c,val){
+  if(OV[c]===val) delete OV[c]; else OV[c]=val;  // toggle off if same
+  saveOv(); renderAll();
+}
+
+function renderBoard(){
+  const box=document.getElementById('board'); box.innerHTML='';
+  const rows=DRAW.map(p=>{
+    const ss=p.teams.map(([nm])=>STAT[canon(nm)]);
+    const best=Math.max(...ss.map(s=>s.progress));
+    const bestReached=Math.max(...ss.map(s=>s.reached));
+    const aliveN=ss.filter(s=>s.alive).length;
+    const sum=ss.reduce((a,s)=>a+s.progress,0);
+    const champ=ss.some(s=>s.champion);
+    return {p, best, bestReached, aliveN, sum, champ};
+  }).sort((a,b)=> b.best-a.best || b.aliveN-a.aliveN || b.sum-a.sum);
+
+  rows.forEach((r,i)=>{
+    const card=document.createElement('div'); card.className='lbcard';
+    const bestTxt = r.bestReached>=1 ? (LVL_LABEL[Math.min(r.bestReached,6)]||'—') : '—';
+    card.innerHTML=`<div class="rankbig">${i+1}</div>
+      <div class="pname"><span class="swatch" style="background:${r.p.color}"></span>${r.p.name}${r.champ?' 🏆':''}</div>
+      <div class="best">Best team: <strong>${r.champ?'Champions 🏆':bestTxt}</strong></div>
+      <div class="alive">${r.aliveN} <span>of ${r.p.teams.length} still in</span></div>`;
+    box.appendChild(card);
+  });
+}
+
+function matchCard(e){
+  const st=stageOf(e.dateEvent);
+  const hs=num(e.intHomeScore), as=num(e.intAwayScore);
+  const fin=isFinished(e), live=isLive(e);
+  const hWin=fin&&hs>as, aWin=fin&&as>hs;
+  const scoreH = (live||fin)&&hs!==null?hs:'';
+  const scoreA = (live||fin)&&as!==null?as:'';
+  let when;
+  if(live){ when=`<span style="color:#c0392b;font-weight:800">🔴 ${e.strStatus||'LIVE'}</span>`; }
+  else if(fin){ when='Full time'; }
+  else {
+    const dt=new Date((e.strTimestamp||e.dateEvent)+ (e.strTimestamp?'':'T12:00:00'));
+    when=dt.toLocaleString([], {weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+  }
+  const badge=(u)=> u?`<img src="${u}" alt="" onerror="this.style.visibility='hidden'">`:'<span style="width:22px"></span>';
+  const tag=(c)=> TEAMS[c]?` <span style="color:${TEAMS[c].color};font-weight:800">•</span>`:'';
+  return `<div class="match">
+    <div class="stg"><span>${st?st.label:''}</span><span class="lv">${live?'LIVE':''}</span></div>
+    <div class="row ${hWin?'win':(aWin?'lose':'')}">${badge(e.strHomeTeamBadge)}<span class="tn">${e.strHomeTeam}${tag(canon(e.strHomeTeam))}</span><span class="sc">${scoreH}</span></div>
+    <div class="row ${aWin?'win':(hWin?'lose':'')}">${badge(e.strAwayTeamBadge)}<span class="tn">${e.strAwayTeam}${tag(canon(e.strAwayTeam))}</span><span class="sc">${scoreA}</span></div>
+    <div class="when">${when}</div>
+  </div>`;
+}
+
+function renderScoreboard(){
+  const ko=koMatchesForOurTeams();
+  const live=ko.filter(isLive).sort((a,b)=>a.strTimestamp<b.strTimestamp?-1:1);
+  const results=ko.filter(isFinished).sort((a,b)=>a.dateEvent<b.dateEvent?1:-1).slice(0,12);
+  const upcoming=ko.filter(e=>notStarted(e)).sort((a,b)=>a.strTimestamp<b.strTimestamp?-1:1).slice(0,12);
+  document.getElementById('live').innerHTML = live.length?live.map(matchCard).join(''):'<div class="emptyc">No live matches right now.</div>';
+  document.getElementById('results-list').innerHTML = results.length?results.map(matchCard).join(''):'<div class="emptyc">No knockout results yet.</div>';
+  document.getElementById('upcoming').innerHTML = upcoming.length?upcoming.map(matchCard).join(''):'<div class="emptyc">No fixtures scheduled yet.</div>';
+}
+
+function renderWinner(){
+  const el=document.getElementById('winner');
+  let champC=null;
+  Object.keys(STAT).forEach(c=>{ if(STAT[c].champion) champC=c; });
+  if(champC){
+    const t=TEAMS[champC];
+    el.className='winner show';
+    el.innerHTML=`<div class="t">🏆 World Champions 🏆</div>
+      <div class="n">${t.player} wins the sweepstake!</div>
+      <div>${t.flag} ${t.name} are champions of the world.</div>`;
+  } else { el.className='winner'; el.innerHTML=''; }
+}
+
+/* ---------------- Go ---------------- */
+renderAll();          // draw squads immediately
+refresh();            // then load live data
+setInterval(refresh, 60000);
+</script>
+</body>
+</html>
