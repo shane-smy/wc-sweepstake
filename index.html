@@ -54,7 +54,8 @@
   .match .stg .lv{color:#c0392b;font-weight:800}
   .match .row{display:flex;align-items:center;gap:8px;padding:2px 0}
   .match .row img{width:20px;height:20px;object-fit:contain;flex:0 0 auto}
-  .match .row .tn{flex:1;font-weight:600;font-size:13.5px}
+  .match .row .tn{flex:1;font-weight:600;font-size:13.5px;min-width:0}
+  .match .owner{font-size:11px;font-weight:800;white-space:nowrap;margin-left:5px}
   .match .row .sc{font-weight:800;font-size:16px;min-width:20px;text-align:center}
   .match .row.win .tn{color:var(--dark)}
   .match .row.lose{opacity:.5}
@@ -319,7 +320,13 @@ function renderBoard(){
 }
 
 /* ---------------- Matches ---------------- */
-function ourDot(side){ return (side.real && TEAMS[side.canon]) ? ` <span style="color:${TEAMS[side.canon].color};font-weight:800">•</span>` : ''; }
+function ourDot(side){
+  if(side.real && TEAMS[side.canon]){
+    const t=TEAMS[side.canon];
+    return ` <span class="owner" style="color:${t.color}">● ${t.player}</span>`;
+  }
+  return '';
+}
 function matchCard(e){
   const live=e.state==='in', fin=e.completed;
   const badge=u=> u?`<img src="${u}" alt="" onerror="this.style.visibility='hidden'">`:'<span style="width:20px"></span>';
