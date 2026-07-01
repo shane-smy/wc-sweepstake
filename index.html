@@ -29,7 +29,8 @@
   .btn-ghost{background:#eef1ee;color:var(--ink);padding:7px 13px;font-size:13px}
   .btn-ghost:hover{background:#e2e7e2}
 
-  h2.sec{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--green);margin:28px 0 12px;display:flex;align-items:center;gap:8px}
+  h2.sec{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--green);margin:28px 0 6px;display:flex;align-items:center;gap:8px}
+  .sec-note{font-size:12.5px;color:var(--muted);margin:0 0 12px}
 
   /* Winner banner */
   .winner{display:none;background:linear-gradient(120deg,#12603a,#0c9648);color:#fff;border-radius:16px;padding:20px 22px;text-align:center;box-shadow:var(--shadow);margin-bottom:6px}
@@ -61,7 +62,7 @@
   .match .row.win .tn{color:var(--dark)}
   .match .row.lose{opacity:.5}
   .match .when{font-size:12px;color:var(--muted);margin-top:6px}
-  .emptyc{color:var(--muted);font-size:13.5px;padding:12px;background:#fff;border:1px dashed var(--line);border-radius:12px}
+  .emptyc{color:var(--muted);font-size:13.5px;padding:12px;background:#fff;border:1px dashed var(--line);border-radius:12px;line-height:1.5}
 
   /* Squads */
   .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px}
@@ -80,8 +81,9 @@
   .pill.out{background:#fbe7e4;color:#c0392b}
   .pill.live{background:#c0392b;color:#fff}
   .pill.champ{background:var(--gold);color:#3a2f00}
-  .ov{cursor:pointer;font-size:11px;color:#b7c0b7;margin-left:2px;user-select:none}
-  .ov:hover{color:#c0392b}
+  .ov{cursor:pointer;font-size:12px;color:#b7c0b7;margin-left:2px;user-select:none;padding:2px 4px;border-radius:6px}
+  .ov:hover{color:#fff;background:#c0392b}
+  li.out .ov:hover{background:#0a7d3c}
 
   .foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:30px;line-height:1.7}
   .foot a{color:var(--green)}
@@ -103,9 +105,11 @@
   <div class="winner" id="winner"></div>
 
   <h2 class="sec">🏆 Leaderboard</h2>
+  <p class="sec-note">Ranked by how far each player's best team has reached, then by teams still in.</p>
   <div class="board" id="board"></div>
 
   <h2 class="sec">📺 Live &amp; recent scores</h2>
+  <p class="sec-note">Live scores appear here when the data feed has them. Whatever the feed does, keep the standings right by tapping <strong>✕</strong> on a team when it's knocked out.</p>
   <div class="scols">
     <div class="scol"><h3>🔴 Live now</h3><div id="live"></div></div>
     <div class="scol"><h3>✅ Latest results</h3><div id="results-list"></div></div>
@@ -113,12 +117,12 @@
   </div>
 
   <h2 class="sec">👥 The squads</h2>
+  <p class="sec-note">Tap <strong>✕</strong> to knock a team out when it loses · tap <strong>↺</strong> to put one back. Your changes are saved on this device.</p>
   <div class="results" id="squads"></div>
 
   <div class="foot">
-    Live data from <a href="https://www.thesportsdb.com" target="_blank">TheSportsDB</a> · refreshes automatically every 60 seconds (needs an internet connection).<br>
-    A team is marked <strong>Out</strong> when it loses a knockout tie; penalty results resolve automatically once the next round is set.
-    See something wrong? Hover a team and click <strong>✕/↺</strong> to fix it by hand.
+    Live scores from <a href="https://www.thesportsdb.com" target="_blank">TheSportsDB</a> (free feed — may lag the real tournament) · page refreshes every 60 seconds.<br>
+    Teams show their current round automatically as the tournament progresses; you decide when a team is out with the <strong>✕</strong> button.
   </div>
 </div>
 
@@ -142,11 +146,20 @@ const STAGES = [
   {from:'2026-07-19', to:'2026-07-19', lvl:6, label:'Final', short:'Final'},
 ];
 const LVL_LABEL = {1:'Round of 32',2:'Round of 16',3:'Quarter-final',4:'Semi-final',5:'Third place',6:'Final',7:'Champions'};
+const FINAL_FROM = '2026-07-19';
 function stageOf(d){ for(const s of STAGES){ if(d>=s.from && d<=s.to) return s; } return null; }
 
 const TODAY = new Date().toISOString().slice(0,10);
+// Which knockout round is the tournament in, judged purely by today's date.
+// (3rd-place playoff maps to Semi-final level so it never over-promotes a team.)
+function currentStageLvlByDate(){
+  let lvl = 1; // all drawn teams start in the Round of 32
+  STAGES.forEach(s=>{ if(TODAY >= s.from){ lvl = Math.max(lvl, s.lvl===5?4:s.lvl); } });
+  return Math.min(lvl, 6);
+}
+
 const API = 'https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026';
-const OVKEY = 'wc26_overrides_v1';
+const OVKEY = 'wc26_overrides_v2';
 
 /* ---------------- Team name normalisation ---------------- */
 function canon(n){
@@ -157,11 +170,13 @@ function canon(n){
   if(s.includes('capeverde')||s.includes('caboverde')) return 'capeverde';
   return s;
 }
-// canon -> {name, flag, player, color}
 const TEAMS = {};
 DRAW.forEach(p=>p.teams.forEach(([nm,fl])=>{ TEAMS[canon(nm)] = {name:nm, flag:fl, player:p.name, color:p.color}; }));
 
-/* ---------------- State ---------------- */
+/* ---------------- State ----------------
+   OV[canon] = 'in'            -> forced still-in
+             = <number lvl>    -> knocked out at that round
+             = undefined       -> automatic (feed + calendar)               */
 let EVENTS = [];
 let OV = load();
 function load(){ try{return JSON.parse(localStorage.getItem(OVKEY))||{};}catch(e){return {};} }
@@ -191,12 +206,15 @@ async function refresh(manual){
       'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     renderAll();
   }catch(err){
-    document.getElementById('updated').textContent = 'Live data unavailable — showing squads (check connection).';
-    if(EVENTS.length===0) renderAll();
+    document.getElementById('updated').textContent = 'Scores feed unavailable — standings still work (check connection).';
+    renderAll();
   }
 }
 
 /* ---------------- Status engine ---------------- */
+let APPEAR = {};
+let STAT = {};
+
 function buildAppearances(){
   const ap = {};
   EVENTS.forEach(e=>{ const st=stageOf(e.dateEvent); if(!st) return;
@@ -204,81 +222,85 @@ function buildAppearances(){
   });
   return ap;
 }
+
 function statusFor(c){
   const ap = APPEAR;
   const ms = EVENTS.filter(e=>{ const st=stageOf(e.dateEvent); return st && (canon(e.strHomeTeam)===c || canon(e.strAwayTeam)===c); })
                    .sort((a,b)=> a.dateEvent<b.dateEvent?-1:1);
-  let out=false, lostLvl=null, champion=false, maxLvl=0;
-  let liveMatch=null, nextMatch=null, lastWinLvl=0, unresolved=false;
+  let autoOutLvl=null, autoChampion=false, feedMaxLvl=0, liveMatch=null, nextMatch=null;
   ms.forEach(e=>{
-    const st=stageOf(e.dateEvent); maxLvl=Math.max(maxLvl, st.lvl);
+    const st=stageOf(e.dateEvent); feedMaxLvl=Math.max(feedMaxLvl, st.lvl);
     const home = canon(e.strHomeTeam)===c;
-    const opp = canon(home?e.strAwayTeam:e.strHomeTeam);
+    const opp  = canon(home?e.strAwayTeam:e.strHomeTeam);
     const hs=num(e.intHomeScore), as=num(e.intAwayScore);
     if(isLive(e)) liveMatch=e;
     if(notStarted(e) && !nextMatch) nextMatch=e;
     if(isFinished(e) && hs!==null && as!==null){
       const gf=home?hs:as, ga=home?as:hs;
-      if(gf<ga){ out=true; lostLvl=st.lvl; }
-      else if(gf>ga){ if(st.lvl===6) champion=true; lastWinLvl=Math.max(lastWinLvl, st.lvl); }
-      else { // level after FT -> penalties: resolve by who appears later
-        if((ap[c]||0) > st.lvl){ lastWinLvl=Math.max(lastWinLvl, st.lvl); }
-        else if((ap[opp]||0) > st.lvl){ out=true; lostLvl=st.lvl; }
-        else { unresolved=true; }
+      if(gf<ga){ autoOutLvl=st.lvl; }
+      else if(gf>ga){ if(st.lvl===6) autoChampion=true; }
+      else { // FT draw -> penalties; loser is the one who doesn't appear in a later round
+        if((ap[opp]||0) > st.lvl && (ap[c]||0) <= st.lvl){ autoOutLvl=st.lvl; }
       }
     }
   });
-  // manual override
-  if(OV[c]==='out'){ out=true; champion=false; if(lostLvl===null) lostLvl=maxLvl||1; }
-  if(OV[c]==='in'){ out=false; }
 
-  let reached;
-  if(champion) reached=7;
-  else if(out) reached=lostLvl||maxLvl||1;
-  else reached=Math.max(maxLvl, lastWinLvl>=maxLvl?lastWinLvl+1:maxLvl); // through to next if won latest
-  reached=Math.min(reached,7);
+  const ov = OV[c];
+  let out=false, outLvl=null;
+  if(ov==='in'){ out=false; }
+  else if(typeof ov==='number'){ out=true; outLvl=ov; }
+  else if(autoOutLvl!==null){ out=true; outLvl=autoOutLvl; }
 
   const alive = !out;
-  const progress = champion?1000 : reached*10 + (alive?5:0);
-  return {c, out, champion, alive, reached, progress, liveMatch, nextMatch, unresolved, lostLvl, maxLvl, overridden:!!OV[c]};
-}
+  let reached = out ? outLvl : Math.max(currentStageLvlByDate(), feedMaxLvl);
+  reached = Math.min(reached, 6);
 
-/* ---------------- Rendering ---------------- */
-let APPEAR = {};
-let STAT = {};
+  return {c, out, outLvl, alive, reached, liveMatch, nextMatch, autoChampion,
+          champion:false, progress:0, manual:(ov!==undefined)};
+}
 
 function renderAll(){
   APPEAR = buildAppearances();
   STAT = {};
   Object.keys(TEAMS).forEach(c=> STAT[c]=statusFor(c));
+
+  // Champion: feed says someone won the final, OR (from the final onwards) only one team is left standing.
+  const aliveList = Object.keys(STAT).filter(c=>STAT[c].alive);
+  let champ=null;
+  Object.keys(STAT).forEach(c=>{ if(STAT[c].autoChampion) champ=c; });
+  if(!champ && TODAY>=FINAL_FROM && aliveList.length===1) champ=aliveList[0];
+
+  Object.keys(STAT).forEach(c=>{
+    const s=STAT[c];
+    if(c===champ){ s.champion=true; s.alive=true; s.out=false; s.reached=7; }
+    s.progress = s.champion ? 1000 : s.reached*10 + (s.alive?5:0);
+  });
+
   renderBoard();
   renderScoreboard();
   renderSquads();
   renderWinner();
 }
 
+/* ---------------- Squads ---------------- */
 function statusPill(s){
-  if(s.champion) return '<span class="pill champ">🏆 Champions</span>';
-  if(s.out) return `<span class="pill out">Out · ${LVL_LABEL[s.lostLvl]||''}</span>`;
-  if(s.liveMatch) return '<span class="pill live">🔴 Live now</span>';
-  if(s.nextMatch){ const st=stageOf(s.nextMatch.dateEvent); return `<span class="pill in">Into ${st.label}</span>`; }
-  if(s.reached>1) return `<span class="pill in">Through to ${LVL_LABEL[Math.min(s.reached,6)]}</span>`;
-  return '<span class="pill in">In</span>';
+  if(s.champion)   return '<span class="pill champ">🏆 Champions</span>';
+  if(s.out)        return `<span class="pill out">Out · ${LVL_LABEL[s.outLvl]||''}</span>`;
+  if(s.liveMatch)  return '<span class="pill live">🔴 Live now</span>';
+  return `<span class="pill in">In · ${LVL_LABEL[Math.min(s.reached,6)]}</span>`;
 }
-
 function renderSquads(){
   const box=document.getElementById('squads'); box.innerHTML='';
   DRAW.forEach(p=>{
-    const statuses=p.teams.map(([nm])=>STAT[canon(nm)]);
-    const aliveN=statuses.filter(s=>s.alive).length;
+    const aliveN=p.teams.filter(([nm])=>STAT[canon(nm)].alive).length;
     const card=document.createElement('div'); card.className='pcard';
     card.innerHTML=`<div class="phead" style="background:${p.color}">
         <span>${p.name}</span><span class="sub">${aliveN}/${p.teams.length} alive</span></div>
       <ul>${p.teams.map(([nm,fl])=>{
         const c=canon(nm); const s=STAT[c];
         const ovBtn = s.alive
-          ? `<span class="ov" title="Mark out" onclick="setOv('${c}','out')">✕</span>`
-          : `<span class="ov" title="Back in" onclick="setOv('${c}','in')">↺</span>`;
+          ? `<span class="ov" title="Mark knocked out" onclick="markOut('${c}')">✕</span>`
+          : `<span class="ov" title="Put back in" onclick="backIn('${c}')">↺</span>`;
         return `<li class="${s.alive?'':'out'}">
             <span class="flag">${fl}</span><span class="nm">${nm}</span>
             ${statusPill(s)} ${ovBtn}</li>`;
@@ -286,27 +308,27 @@ function renderSquads(){
     box.appendChild(card);
   });
 }
+function markOut(c){ OV[c]=currentStageLvlByDate(); saveOv(); renderAll(); }
+function backIn(c){ OV[c]='in'; saveOv(); renderAll(); }
 
-function setOv(c,val){
-  if(OV[c]===val) delete OV[c]; else OV[c]=val;  // toggle off if same
-  saveOv(); renderAll();
-}
-
+/* ---------------- Leaderboard ---------------- */
 function renderBoard(){
   const box=document.getElementById('board'); box.innerHTML='';
   const rows=DRAW.map(p=>{
     const ss=p.teams.map(([nm])=>STAT[canon(nm)]);
-    const best=Math.max(...ss.map(s=>s.progress));
-    const bestReached=Math.max(...ss.map(s=>s.reached));
-    const aliveN=ss.filter(s=>s.alive).length;
-    const sum=ss.reduce((a,s)=>a+s.progress,0);
-    const champ=ss.some(s=>s.champion);
-    return {p, best, bestReached, aliveN, sum, champ};
+    return {
+      p,
+      best:Math.max(...ss.map(s=>s.progress)),
+      bestReached:Math.max(...ss.map(s=>s.reached)),
+      aliveN:ss.filter(s=>s.alive).length,
+      sum:ss.reduce((a,s)=>a+s.progress,0),
+      champ:ss.some(s=>s.champion)
+    };
   }).sort((a,b)=> b.best-a.best || b.aliveN-a.aliveN || b.sum-a.sum);
 
   rows.forEach((r,i)=>{
     const card=document.createElement('div'); card.className='lbcard';
-    const bestTxt = r.bestReached>=1 ? (LVL_LABEL[Math.min(r.bestReached,6)]||'—') : '—';
+    const bestTxt = LVL_LABEL[Math.min(r.bestReached,6)]||'—';
     card.innerHTML=`<div class="rankbig">${i+1}</div>
       <div class="pname"><span class="swatch" style="background:${r.p.color}"></span>${r.p.name}${r.champ?' 🏆':''}</div>
       <div class="best">Best team: <strong>${r.champ?'Champions 🏆':bestTxt}</strong></div>
@@ -315,40 +337,44 @@ function renderBoard(){
   });
 }
 
+/* ---------------- Scoreboard ---------------- */
 function matchCard(e){
   const st=stageOf(e.dateEvent);
   const hs=num(e.intHomeScore), as=num(e.intAwayScore);
   const fin=isFinished(e), live=isLive(e);
   const hWin=fin&&hs>as, aWin=fin&&as>hs;
-  const scoreH = (live||fin)&&hs!==null?hs:'';
-  const scoreA = (live||fin)&&as!==null?as:'';
+  const scoreH=(live||fin)&&hs!==null?hs:'';
+  const scoreA=(live||fin)&&as!==null?as:'';
   let when;
   if(live){ when=`<span style="color:#c0392b;font-weight:800">🔴 ${e.strStatus||'LIVE'}</span>`; }
   else if(fin){ when='Full time'; }
-  else {
-    const dt=new Date((e.strTimestamp||e.dateEvent)+ (e.strTimestamp?'':'T12:00:00'));
+  else{
+    const dt=new Date(e.strTimestamp || (e.dateEvent+'T12:00:00'));
     when=dt.toLocaleString([], {weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
   }
-  const badge=(u)=> u?`<img src="${u}" alt="" onerror="this.style.visibility='hidden'">`:'<span style="width:22px"></span>';
-  const tag=(c)=> TEAMS[c]?` <span style="color:${TEAMS[c].color};font-weight:800">•</span>`:'';
+  const badge=u=> u?`<img src="${u}" alt="" onerror="this.style.visibility='hidden'">`:'<span style="width:22px"></span>';
+  const dot=c=> TEAMS[c]?` <span style="color:${TEAMS[c].color};font-weight:800">•</span>`:'';
   return `<div class="match">
     <div class="stg"><span>${st?st.label:''}</span><span class="lv">${live?'LIVE':''}</span></div>
-    <div class="row ${hWin?'win':(aWin?'lose':'')}">${badge(e.strHomeTeamBadge)}<span class="tn">${e.strHomeTeam}${tag(canon(e.strHomeTeam))}</span><span class="sc">${scoreH}</span></div>
-    <div class="row ${aWin?'win':(hWin?'lose':'')}">${badge(e.strAwayTeamBadge)}<span class="tn">${e.strAwayTeam}${tag(canon(e.strAwayTeam))}</span><span class="sc">${scoreA}</span></div>
+    <div class="row ${hWin?'win':(aWin?'lose':'')}">${badge(e.strHomeTeamBadge)}<span class="tn">${e.strHomeTeam}${dot(canon(e.strHomeTeam))}</span><span class="sc">${scoreH}</span></div>
+    <div class="row ${aWin?'win':(hWin?'lose':'')}">${badge(e.strAwayTeamBadge)}<span class="tn">${e.strAwayTeam}${dot(canon(e.strAwayTeam))}</span><span class="sc">${scoreA}</span></div>
     <div class="when">${when}</div>
   </div>`;
 }
-
 function renderScoreboard(){
   const ko=koMatchesForOurTeams();
-  const live=ko.filter(isLive).sort((a,b)=>a.strTimestamp<b.strTimestamp?-1:1);
+  const live=ko.filter(isLive).sort((a,b)=>(a.strTimestamp||'')<(b.strTimestamp||'')?-1:1);
   const results=ko.filter(isFinished).sort((a,b)=>a.dateEvent<b.dateEvent?1:-1).slice(0,12);
-  const upcoming=ko.filter(e=>notStarted(e)).sort((a,b)=>a.strTimestamp<b.strTimestamp?-1:1).slice(0,12);
-  document.getElementById('live').innerHTML = live.length?live.map(matchCard).join(''):'<div class="emptyc">No live matches right now.</div>';
-  document.getElementById('results-list').innerHTML = results.length?results.map(matchCard).join(''):'<div class="emptyc">No knockout results yet.</div>';
-  document.getElementById('upcoming').innerHTML = upcoming.length?upcoming.map(matchCard).join(''):'<div class="emptyc">No fixtures scheduled yet.</div>';
+  const upcoming=ko.filter(e=>notStarted(e)).sort((a,b)=>(a.strTimestamp||'')<(b.strTimestamp||'')?-1:1).slice(0,12);
+  document.getElementById('live').innerHTML = live.length?live.map(matchCard).join('')
+    :'<div class="emptyc">No live matches right now.</div>';
+  document.getElementById('results-list').innerHTML = results.length?results.map(matchCard).join('')
+    :'<div class="emptyc">No knockout results from the feed yet — it lags the real tournament. The squads below still show each team’s round.</div>';
+  document.getElementById('upcoming').innerHTML = upcoming.length?upcoming.map(matchCard).join('')
+    :'<div class="emptyc">No fixtures from the feed yet. Standings still update as you mark teams out.</div>';
 }
 
+/* ---------------- Winner banner ---------------- */
 function renderWinner(){
   const el=document.getElementById('winner');
   let champC=null;
@@ -363,8 +389,8 @@ function renderWinner(){
 }
 
 /* ---------------- Go ---------------- */
-renderAll();          // draw squads immediately
-refresh();            // then load live data
+renderAll();
+refresh();
 setInterval(refresh, 60000);
 </script>
 </body>
