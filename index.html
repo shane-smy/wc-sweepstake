@@ -62,15 +62,18 @@
   .match .meta{font-size:11px;color:#9aa79a;margin-top:3px}
   .emptyc{color:var(--muted);font-size:13.5px;padding:12px;background:#fff;border:1px dashed var(--line);border-radius:12px;line-height:1.5}
 
-  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px}
+  .results{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+  @media(max-width:980px){.results{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:660px){.results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:440px){.results{grid-template-columns:1fr}}
   .pcard{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 16px rgba(16,50,30,.06)}
   .pcard .phead{padding:11px 14px;color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:space-between}
   .pcard .phead .sub{font-weight:600;font-size:12px;opacity:.9}
-  .pcard ul{list-style:none;margin:0;padding:8px}
-  .pcard li{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:9px;font-size:14.5px;font-weight:600}
+  .pcard ul{list-style:none;margin:0;padding:6px}
+  .pcard li{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:8px;font-size:14px;font-weight:600}
   .pcard li:nth-child(odd){background:#f6f9f6}
-  .pcard li .flag{font-size:18px;flex:0 0 auto}
-  .pcard li .nm{flex:1}
+  .pcard li .flag{font-size:17px;flex:0 0 auto}
+  .pcard li .nm{flex:1;min-width:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pcard li.out .nm{text-decoration:line-through;color:#b0b8b0}
   .pcard li.out .flag{filter:grayscale(1);opacity:.5}
   .pill{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap;letter-spacing:.3px}
@@ -126,7 +129,7 @@
 <script>
 /* ---------------- The locked-in draw ---------------- */
 const DRAW = [
-  {name:'Bri',   color:'#0c9648', teams:[['Colombia','🇨🇴'],['Ghana','🇬🇭'],['England','🏴󠁧󠁢󠁥󠁮󠁧󠁿'],['Egypt','🇪🇬'],['Bosnia & Herz.','🇧🇦']]},
+  {name:'Bri',   color:'#0c9648', teams:[['Colombia','🇨🇴'],['Ghana','🇬🇭'],['England','🏴󠁧󠁢󠁥󠁮󠁧󠁿'],['Egypt','🇪🇬'],['Bosnia','🇧🇦']]},
   {name:'Shane', color:'#c0392b', teams:[['Norway','🇳🇴'],['Argentina','🇦🇷'],['Paraguay','🇵🇾'],['DR Congo','🇨🇩'],['Belgium','🇧🇪']]},
   {name:'Tom',   color:'#2563c9', teams:[['Australia','🇦🇺'],['Morocco','🇲🇦'],['Switzerland','🇨🇭'],['USA','🇺🇸'],['Austria','🇦🇹']]},
   {name:'Seb',   color:'#e8880b', teams:[['Portugal','🇵🇹'],['Canada','🇨🇦'],['Algeria','🇩🇿'],['Brazil','🇧🇷'],['Cape Verde','🇨🇻']]},
@@ -270,11 +273,12 @@ function renderAll(){
 }
 
 /* ---------------- Squads ---------------- */
+const SHORT = {1:'R32',2:'R16',3:'QF',4:'SF',5:'3rd',6:'Final',7:'Champ'};
 function statusPill(s){
-  if(s.champion)  return '<span class="pill champ">🏆 Champions</span>';
-  if(s.out)       return `<span class="pill out">Out · ${stageLabelByLvl(s.outLvl)}</span>`;
-  if(s.liveMatch) return '<span class="pill live">🔴 Live now</span>';
-  return `<span class="pill in">In · ${stageLabelByLvl(Math.min(s.reached,6))}</span>`;
+  if(s.champion)  return '<span class="pill champ">🏆 Champ</span>';
+  if(s.out)       return `<span class="pill out">Out · ${SHORT[s.outLvl]||''}</span>`;
+  if(s.liveMatch) return '<span class="pill live">🔴 Live</span>';
+  return `<span class="pill in">In · ${SHORT[Math.min(s.reached,6)]||''}</span>`;
 }
 function renderSquads(){
   const box=document.getElementById('squads'); box.innerHTML='';
